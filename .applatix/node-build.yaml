@@ -57,7 +57,11 @@ description: This is the base template for build-test node
 steps:
   - build:
       template: node-build-base
-  - test:
+  - test1:
+      template: node-test-base
+      parameters:
+        test_artifact_input: "%%steps.build.build_output%%"
+    test2:
       template: node-test-base
       parameters:
         test_artifact_input: "%%steps.build.build_output%%"
