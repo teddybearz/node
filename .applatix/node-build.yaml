@@ -9,7 +9,7 @@ container:
     cpu_cores: 1.5
   image: applatix/node-build-%%os%%
   docker_options: "-e TTTTT=%%build_env_tttt%%" 
-  command: bash -c 'cd /node-src && ls -lrt && ./configure && ./make -j 1'
+  command: bash -c 'cd /node-src && ls -lrt && ./configure && make -j 2'
 inputs:
   artifacts:
   - from: "%%checkout_artifact%%"
