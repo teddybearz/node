@@ -87,10 +87,15 @@ steps:
     checkout:
       template: axscm-checkout
   - 
-    node-build:
+    node-build-ubuntu-16.04:
       template: node-build-test-base
       parameters:
-        os: $$[ubuntu-16.04, centos7]$$
+        os: ubuntu-16.04
+        checkout_artifact: "%%steps.checkout.code%%"
+    node-build-centos7:
+      template: node-build-test-base
+      parameters:
+        os: centos7
         checkout_artifact: "%%steps.checkout.code%%"
 
 termination_policy:
