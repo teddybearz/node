@@ -8,7 +8,7 @@ container:
     mem_mib: 4000
     cpu_cores: 1.5
   image: applatix/node-build-%%os%%
-  docker_options: "-e TTTTT=%%build_env_tttt%%" 
+  docker_options: "-e envTTTT=%%build_env_tttt%%" 
   command: bash -c 'cd /node-src && ls -lrt && ./configure && make -j 2'
 inputs:
   artifacts:
@@ -33,8 +33,8 @@ container:
     mem_mib: 4000
     cpu_cores: 1.5
   image: applatix/node-build-%%os%%
-  docker_options: "-e CC=%%build_env_tttt%%" 
-  command: bash -c 'cd /node-src && ls -lrt && cd /node-src/out && ls -lrt'
+  docker_options: "-e envTTTT=%%build_env_tttt%%" 
+  command: bash -c "cd /node-src && ls -lrt && ls -lrt /node-src/out && PYTHONPATH=/node-src/tools python  /node-src/test/sequential/testcfg.py && find /node-src/test/sequential/ -name '*.js' -exec /node-src/out/Release/node {} \;"
 inputs:
   artifacts:
   - from: "%%checkout_artifact%%"
@@ -90,7 +90,7 @@ steps:
     node-build:
       template: node-build-test-base
       parameters:
-        os: $$[ubuntu-16.04]$$
+        os: $$[ubuntu-16.04, centos7]$$
         checkout_artifact: "%%steps.checkout.code%%"
 
 termination_policy:
