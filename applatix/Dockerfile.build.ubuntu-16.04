@@ -1,0 +1,21 @@
+FROM ubuntu:16.04
+
+RUN apt-get update && apt-get -y install \
+      automake \
+      build-essential \
+      cmake \
+      curl \
+      libssl-dev \
+      git \
+      libtool \
+      libunwind8 \
+      libunwind-setjmp0-dev \
+      python \
+      python2.7-dev \
+      python-software-properties \
+      software-properties-common \
+      python-setuptools \
+      zip \
+      unzip \
+      wget
+

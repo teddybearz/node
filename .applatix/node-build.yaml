@@ -1,0 +1,127 @@
+---
+type: service_template
+subtype: container
+name: node-build-base
+description: This is the base template for building node
+container:
+  resources:
+    mem_mib: 4000
+    cpu_cores: 1.5
+  image: applatix/node-build-%%os%%
+  docker_options: "-e TTTTT=%%build_env_tttt%%" 
+  command: bash -c 'cd /node-src && ls -lrt && ./configure && ./make -j 1'
+inputs:
+  artifacts:
+  - from: "%%checkout_artifact%%"
+    path: "/node-src"
+  parameters:
+    os:
+    checkout_artifact:
+    build_env_tttt:
+outputs:
+  artifacts:
+    build_output:
+      path: "/node-src/out"
+
+---
+type: service_template
+subtype: container
+name: node-test-base
+description: This is the base template for testing node
+container:
+  resources:
+    mem_mib: 4000
+    cpu_cores: 1.5
+  image: applatix/node-build-%%os%%
+  docker_options: "-e CC=%%build_env_tttt%%" 
+  command: bash -c 'cd /node-src && ls -lrt && cd /node-src/out && ls -lrt'
+inputs:
+  artifacts:
+  - from: "%%checkout_artifact%%"
+    path: "/node-src"
+  - from: "%%test_artifact_input%%"
+    path: "/node-src/out"
+  parameters:
+    os:
+    checkout_artifact:
+    test_artifact_input:
+    build_env_tttt:
+outputs:
+
+
+---
+type: service_template
+subtype: workflow
+name: node-build-test-base
+description: This is the base template for build-test node
+steps:
+  - build:
+      template: node-build-base
+  - test:
+      template: node-test-base
+      parameters:
+        test_artifact_input: "%%steps.build.build_output%%"
+inputs:
+  parameters:
+    os:
+    checkout_artifact:
+    build_env_tttt:
+outputs:
+
+
+---
+type: service_template
+subtype: workflow
+name: node-build-standalone
+description: This is the workflow for building/testing all node components.
+inputs:
+  parameters:
+    commit:
+      default: "%%session.commit%%"
+    repo:
+      default: "%%session.repo%%"
+    build_env_tttt:
+      default: "TTTTT"
+steps:
+  -
+    checkout:
+      template: axscm-checkout
+  - 
+    node-build:
+      template: node-build-test-base
+      parameters:
+        os: $$[ubuntu-16.04]$$
+        checkout_artifact: "%%steps.checkout.code%%"
+
+termination_policy:
+  time_seconds: 7200
+  spending_cents: 100
+
+---
+type: policy
+name: Node Build Policy
+description: Policy to trigger build for all events
+template: node-build-standalone
+parameters:
+notifications:
+  -
+    when:
+      - on_success
+      - on_failure
+    whom:
+      - committer
+      - author
+when:
+  -
+    event: on_push
+    target_branches:
+      - ".*"
+  -
+    event: on_pull_request
+    target_branches:
+      - ".*"
+  -
+    event: on_pull_request_merge
+    target_branches:
+      - ".*"
+
