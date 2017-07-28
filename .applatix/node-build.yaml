@@ -34,7 +34,7 @@ container:
     cpu_cores: 1.5
   image: applatix/node-build-%%os%%
   docker_options: "-e envTTTT=%%build_env_tttt%%" 
-  command: bash -c "cd /node-src && ls -lrt && ls -lrt /node-src/out && PYTHONPATH=/node-src/tools python  /node-src/test/sequential/testcfg.py && find /node-src/test/sequential/ -name '*.js' -exec /node-src/out/Release/node {} \;"
+  command: bash -c "echo %%os%% && date && cd /node-src && ls -lrt && ls -lrt /node-src/out && PYTHONPATH=/node-src/tools python /node-src/test/sequential/testcfg.py && find /node-src/test/sequential/ -name '*.js' -exec /node-src/out/Release/node {} \;"
 inputs:
   artifacts:
   - from: "%%checkout_artifact%%"
