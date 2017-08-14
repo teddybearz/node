@@ -1,0 +1,142 @@
+---
+type: container
+version: 1
+name: node-build-base
+description: This is the base template for building node
+resources:
+  mem_mib: 4000
+  cpu_cores: 1.5
+image: applatix/node-build-%%inputs.parameters.OS%%
+command: ["bash", "-c"]
+args: ["cd /node-src && ls -lrt && ./configure && make -j 2"]
+env:
+- name: envTTTT
+  value: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+inputs:
+  artifacts:
+    NODE-SRC:
+      path: "/node-src"
+  parameters:
+    OS:
+    BUILD_ENV_TTTT:
+outputs:
+  artifacts:
+    BUILD_OUTPUT:
+      path: "/node-src/out"
+
+---
+type: container
+version: 1
+name: node-test-base
+description: This is the base template for testing node
+resources:
+  mem_mib: 4000
+  cpu_cores: 1.5
+image: applatix/node-build-%%inputs.parameters.OS%% 
+command: ["bash", " -c"]
+args: ["echo %%inputs.parameters.OS%% && date && cd /node-src && ls -lrt && ls -lrt /node-src/out && PYTHONPATH=/node-src/tools python /node-src/test/sequential/testcfg.py && find /node-src/test/sequential/ -name '*.js' -exec /node-src/out/Release/node {} \\;"]
+env:
+- name: envTTTT
+  value: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+inputs:
+  artifacts:
+    NODE-SRC:
+      path: "/node-src"
+    NODE-SRC-OUT:
+      path: "/node-src/out"
+  parameters:
+    OS:
+    BUILD_ENV_TTTT:
+outputs:
+
+
+---
+type: workflow
+version: 1
+name: node-build-test-base
+description: This is the base template for build-test node
+steps:
+  - BUILD:
+      template: node-build-base
+      arguments:
+        artifacts.NODE-SRC: "%%inputs.artifacts.SRC%%"
+        parameters.OS: "%%inputs.parameters.OS%%"
+        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+  - TEST1:
+      template: node-test-base
+      arguments:
+        artifacts.NODE-SRC: "%%inputs.artifacts.SRC%%"
+        artifacts.NODE-SRC-OUT: "%%steps.BUILD.outputs.artifacts.BUILD_OUTPUT%%"
+        parameters.OS: "%%inputs.parameters.OS%%"
+        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+    TEST2:
+      template: node-test-base
+      arguments:
+        artifacts.NODE-SRC: "%%inputs.artifacts.SRC%%"
+        artifacts.NODE-SRC-OUT: "%%steps.BUILD.outputs.artifacts.BUILD_OUTPUT%%"
+        parameters.OS: "%%inputs.parameters.OS%%"
+        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+inputs:
+  parameters:
+    OS:
+    BUILD_ENV_TTTT:
+  artifacts:
+    SRC:
+outputs:
+
+
+---
+type: workflow
+version: 1 
+name: node-build-standalone
+description: This is the workflow for building/testing all node components.
+inputs:
+  parameters:
+    COMMIT:
+      default: "%%session.commit%%"
+    REPO:
+      default: "%%session.repo%%"
+    BUILD_ENV_TTTT:
+      default: "TTTTT"
+steps:
+  - CHECKOUT:
+      template: argo-checkout
+  - NODE-BUILD-UBUNTU-16-04:
+      template: node-build-test-base
+      arguments:
+        parameters.OS: ubuntu-16.04
+        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+        artifacts.SRC: "%%steps.CHECKOUT.outputs.artifacts.CODE%%"
+    NODE-BUILD-CENTOS7:
+      template: node-build-test-base
+      arguments:
+        parameters.OS: centos7
+        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
+        artifacts.SRC: "%%steps.CHECKOUT.outputs.artifacts.CODE%%"
+
+termination_policy:
+  time_seconds: 7200
+  spending_cents: 100
+
+---
+type: policy
+version: 1
+name: Node Build Policy
+description: Policy to trigger build for all events
+template: node-build-standalone
+notifications:
+  -
+    when:
+      - on_success
+      - on_failure
+    whom:
+      - committer
+      - author
+when:
+  -
+    event: on_push
+  -
+    event: on_pull_request
+  -
+    event: on_pull_request_merge
+
