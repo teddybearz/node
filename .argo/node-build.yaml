@@ -14,7 +14,7 @@ env:
   value: "%%inputs.parameters.BUILD_ENV_TTTT%%"
 inputs:
   artifacts:
-    NODE-SRC:
+    CODE:
       path: "/node-src"
   parameters:
     OS:
@@ -40,7 +40,7 @@ env:
   value: "%%inputs.parameters.BUILD_ENV_TTTT%%"
 inputs:
   artifacts:
-    NODE-SRC:
+    CODE:
       path: "/node-src"
     NODE-SRC-OUT:
       path: "/node-src/out"
@@ -59,29 +59,23 @@ steps:
   - BUILD:
       template: node-build-base
       arguments:
-        artifacts.NODE-SRC: "%%inputs.artifacts.SRC%%"
         parameters.OS: "%%inputs.parameters.OS%%"
-        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
   - TEST1:
       template: node-test-base
       arguments:
-        artifacts.NODE-SRC: "%%inputs.artifacts.SRC%%"
         artifacts.NODE-SRC-OUT: "%%steps.BUILD.outputs.artifacts.BUILD_OUTPUT%%"
         parameters.OS: "%%inputs.parameters.OS%%"
-        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
     TEST2:
       template: node-test-base
       arguments:
-        artifacts.NODE-SRC: "%%inputs.artifacts.SRC%%"
         artifacts.NODE-SRC-OUT: "%%steps.BUILD.outputs.artifacts.BUILD_OUTPUT%%"
         parameters.OS: "%%inputs.parameters.OS%%"
-        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
 inputs:
   parameters:
     OS:
     BUILD_ENV_TTTT:
   artifacts:
-    SRC:
+    CODE:
 outputs:
 
 
@@ -105,14 +99,12 @@ steps:
       template: node-build-test-base
       arguments:
         parameters.OS: ubuntu-16.04
-        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
-        artifacts.SRC: "%%steps.CHECKOUT.outputs.artifacts.CODE%%"
+        artifacts.CODE: "%%steps.CHECKOUT.outputs.artifacts.CODE%%"
     NODE-BUILD-CENTOS7:
       template: node-build-test-base
       arguments:
         parameters.OS: centos7
-        parameters.BUILD_ENV_TTTT: "%%inputs.parameters.BUILD_ENV_TTTT%%"
-        artifacts.SRC: "%%steps.CHECKOUT.outputs.artifacts.CODE%%"
+        artifacts.CODE: "%%steps.CHECKOUT.outputs.artifacts.CODE%%"
 
 termination_policy:
   time_seconds: 7200
